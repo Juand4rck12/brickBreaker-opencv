@@ -17,6 +17,7 @@ running = True
 paddle_image = pygame.image.load('paddle.png')
 paddle_image = pygame.transform.scale(paddle_image, (150, 40))
 paddle_x, paddle_y = WIDTH // 2, HEIGHT - 100
+paddle_width, paddle_height = 150, 40
 paddle_speed = 10
 
 ball_image = pygame.image.load('esfera.png')
@@ -59,10 +60,41 @@ with mp_hands.Hands(min_detection_confidence = 0.5,
             for hand_landmarks in results.multi_hand_landmarks:
                 mp_draw.draw_landmarks(rgb_frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
+        ball_x += ball_speed_x
+        ball_y += ball_speed_y
+        
+        if ball_x - ball_radius < 0 or ball_x + ball_radius > WIDTH:
+            ball_speed_x *= -1
+            
+        if ball_y - ball_radius < 0:
+            ball_speed_y *= -1
+            
+        if ball_y + ball_radius > HEIGHT:
+            running = False
+        
+        if paddle_x < 0:
+            paddle_x = 0
+        if paddle_y + paddle_width > WIDTH:
+            paddle_x = WIDTH - paddle_width
+            
+        if paddle_x < ball_x < paddle_x + paddle_width and ball_y + ball_radius >= paddle_y:
+            ball_speed_y *= -1
+            
+        for block in blocks:
+            if block.collidepoint(ball_x, ball_y):
+                blocks.remove(block)
+                ball_speed_y *= -1
+                break    
+
         rgb_frame = cv2.resize(rgb_frame, (WIDTH, HEIGHT))
         rgb_frame = np.rot90(rgb_frame)  # Corrige la orientación para Pygame
         rgb_surface = pygame.surfarray.make_surface(rgb_frame)
+        
+        
         screen.blit(rgb_surface, (0, 0))
+        screen.blit(paddle_image, (paddle_x, paddle_y))
+        screen.blit(ball_image, (ball_x - ball_radius,
+                                 ball_y - ball_radius))
         
         for block in blocks:
             screen.blit(block_image, (block.x, block.y))
