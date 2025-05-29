@@ -12,6 +12,7 @@ pygame.init()
 WIDTH, HEIGHT = 800, 600 # Se define el tamaño de la ventana del juego
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Juego Rompe Bloques") # Titulo de la ventana del juego
+clock = pygame.time.Clock()
 running = True
 
 paddle_image = pygame.image.load('paddle.png')
@@ -58,6 +59,8 @@ with mp_hands.Hands(min_detection_confidence = 0.5,
 
         if results.multi_hand_landmarks:
             for hand_landmarks in results.multi_hand_landmarks:
+                index_finger = hand_landmarks.landmark[8]
+                paddle_x = int(index_finger.x * WIDTH) - paddle_width // 2
                 mp_draw.draw_landmarks(rgb_frame, hand_landmarks, mp_hands.HAND_CONNECTIONS)
 
         ball_x += ball_speed_x
@@ -86,6 +89,7 @@ with mp_hands.Hands(min_detection_confidence = 0.5,
                 ball_speed_y *= -1
                 break    
 
+        rgb_frame = cv2.flip(rgb_frame, 1)
         rgb_frame = cv2.resize(rgb_frame, (WIDTH, HEIGHT))
         rgb_frame = np.rot90(rgb_frame)  # Corrige la orientación para Pygame
         rgb_surface = pygame.surfarray.make_surface(rgb_frame)
@@ -100,6 +104,7 @@ with mp_hands.Hands(min_detection_confidence = 0.5,
             screen.blit(block_image, (block.x, block.y))
             
         pygame.display.flip()
+        clock.tick(30)
         
         # cv2.imshow('Titulo CV2', frame) linea de prueba para ver si funciona
         
